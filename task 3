@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Listing with Sorting</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #productList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .product-card {
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 200px;
+      text-align: center;
+    }
+    .product-card img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Product Search</h2>
+
+  <input type="text" id="searchInput" placeholder="Search for a product..." />
+  <button onclick="searchProduct()">Search</button>
+
+  <select id="sortOption" onchange="sortProducts()">
+    <option value="">Sort By</option>
+    <option value="price-asc">Price ↑</option>
+    <option value="price-desc">Price ↓</option>
+    <option value="rating-asc">Rating ↑</option>
+    <option value="rating-desc">Rating ↓</option>
+  </select>
+
+  <p id="errorMsg" style="color:red;"></p>
+
+  <div id="productList"></div>
+
+  <script>
+    let currentProducts = [];
+
+    async function searchProduct() {
+      const query = document.getElementById("searchInput").value.trim();
+      const errorMsg = document.getElementById("errorMsg");
+      const productList = document.getElementById("productList");
+
+      productList.innerHTML = "";
+      errorMsg.textContent = "";
+
+      if (query === "") {
+        errorMsg.textContent = "Search input cannot be empty.";
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://dummyjson.com/products/search?q=${query}`);
+        const data = await response.json();
+
+        if (data.products.length === 0) {
+          errorMsg.textContent = "No products found.";
+          return;
+        }
+
+        currentProducts = data.products;
+        displayProducts(currentProducts);
+      } catch (err) {
+        errorMsg.textContent = "Failed to fetch products.";
+        console.error(err);
+      }
+    }
+
+    function displayProducts(products) {
+      const productList = document.getElementById("productList");
+      productList.innerHTML = "";
+
+      products.forEach(product => {
+        const div = document.createElement("div");
+        div.className = "product-card";
+        div.innerHTML = `
+          <img src="${product.thumbnail}" alt="${product.title}" />
+          <h3>${product.title}</h3>
+          <p>Price: $${product.price}</p>
+          <p>Rating: ${product.rating}</p>
+        `;
+        productList.appendChild(div);
+      });
+    }
+
+    function sortProducts() {
+      const option = document.getElementById("sortOption").value;
+      let sorted = [...currentProducts];
+
+      switch (option) {
+        case "price-asc":
+          sorted.sort((a, b) => a.price - b.price);
+          break;
+        case "price-desc":
+          sorted.sort((a, b) => b.price - a.price);
+          break;
+        case "rating-asc":
+          sorted.sort((a, b) => a.rating - b.rating);
+          break;
+        case "rating-desc":
+          sorted.sort((a, b) => b.rating - a.rating);
+          break;
+        default:
+          return;
+      }
+
+      displayProducts(sorted);
+    }
+  </script>
+
+</body>
+</html>
